@@ -430,3 +430,5 @@ MigrationBackup/
 # Custom settings
 appsettings.Development.json
 appsettings.Local.json
+.idea/
+*.db
