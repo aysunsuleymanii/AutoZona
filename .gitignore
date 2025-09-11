@@ -432,3 +432,17 @@ appsettings.Development.json
 appsettings.Local.json
 .idea/
 *.db
+appsettings.json
+# Build outputs
+bin/
+obj/
+*.dll
+*.pdb
+*.cache
+
+# Build outputs
+bin/
+obj/
+*.dll
+*.pdb
+*.cache
