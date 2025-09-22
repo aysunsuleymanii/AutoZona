@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using AutoZona.Web.Data;
-using AutoZona.Web.Models.IdentityModels;
+using AutoZona.Domain.IdentityModels;
+using AutoZona.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 

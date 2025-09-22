@@ -1,8 +1,7 @@
-namespace AutoZona.Web.Models.DomainModels;
+namespace AutoZona.Domain.DomainModels;
 
-public class CarImage
+public class CarImage : BaseEntity
 {
-    public Guid Id { get; set; }
     public string? ImageUrl { get; set; }
     public string? Description { get; set; }
     public bool IsPrimary { get; set; } = false;

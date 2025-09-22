@@ -446,3 +446,19 @@ obj/
 *.dll
 *.pdb
 *.cache
+# Build results
+**/obj/
+**/bin/
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+**/*.rider.project.model.nuget.info
+**/*.rider.project.restore.info
+
+# macOS
+.DS_Store
+
+# Temporary files
+**/*TestView.html
+Test/
