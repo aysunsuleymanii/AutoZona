@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AutoZona.Service")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d43d6d070bde5d2e4e89d01477682afd0b303ec3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+207694194b5195d0e58f8092920656455399914c")]
 [assembly: System.Reflection.AssemblyProductAttribute("AutoZona.Service")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AutoZona.Service")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
