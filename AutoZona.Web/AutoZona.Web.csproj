@@ -35,4 +35,12 @@
       <ProjectReference Include="..\AutoZona.Repository\AutoZona.Repository.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Views\CarListing\Create.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\CarListing\Delete.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\CarListing\Details.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\CarListing\Edit.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\CarListing\Index.cshtml" />
+    </ItemGroup>
+
 </Project>

@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using AutoZona.Domain.IdentityModels;
 using AutoZona.Repository;
+using AutoZona.Service.Implementation;
+using AutoZona.Service.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,11 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<AutoZonaApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddTransient<ICarImageService, CarImageService>();
+builder.Services.AddTransient<ICarListingService, CarListingService>();
+builder.Services.AddTransient<IFavoriteItemService, FavoriteItemService>();
 
 var app = builder.Build();
 

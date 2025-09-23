@@ -1,113 +1,502 @@
 @model IEnumerable<AutoZona.Domain.DomainModels.CarListing>
-
 @{
-    ViewData["Title"] = "Index";
+ViewData["Title"] = "Browse Cars";
+var currentMake = ViewBag.CurrentMake as string;
+var currentModel = ViewBag.CurrentModel as string;
+var currentFuel = ViewBag.CurrentFuel as AutoZona.Domain.Enums.FuelType?;
+var currentBodyType = ViewBag.CurrentBodyType as AutoZona.Domain.Enums.BodyType?;
+var currentTransmission = ViewBag.CurrentTransmission as AutoZona.Domain.Enums.Transmission?;
+var currentColor = ViewBag.CurrentColor as AutoZona.Domain.Enums.Color?;
+var currentSortBy = ViewBag.CurrentSortBy as string ?? "created";
+var currentSortOrder = ViewBag.CurrentSortOrder as string ?? "desc";
 }
 
-<h1>Index</h1>
+<style>
+    .search-filters {
+        background: white;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Make)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Model)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Year)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Price)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Mileage)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Fuel)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Color)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Transmission)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.BodyType)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsActive)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ListingOwnerId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UpdatedAt)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Make)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Model)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Year)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Price)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Mileage)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Fuel)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Color)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Transmission)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.BodyType)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsActive)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ListingOwnerId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UpdatedAt)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group label {
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #000;
+    }
+
+    .form-group select,
+    .form-group input {
+        padding: 0.75rem;
+        border: 1px solid #e5e5e5;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .search-results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e5e5;
+    }
+
+    .results-count {
+        color: #666;
+        font-size: 1.1rem;
+    }
+
+    .sort-options {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .listings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .listing-card {
+        background: white;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .listing-card:hover {
+        transform: translateY(-4px);
+        border-color: #000;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    .listing-image {
+        height: 220px;
+        background: #f8f8f8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-size: 1.2rem;
+        font-weight: 600;
+        border-bottom: 1px solid #e5e5e5;
+        position: relative;
+    }
+
+    .listing-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #000;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .listing-content {
+        padding: 1.5rem;
+    }
+
+    .listing-title {
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #000;
+    }
+
+    .listing-details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .listing-price {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #000;
+        margin-bottom: 0.5rem;
+    }
+
+    .listing-location {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: 1px solid #000;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .btn-primary {
+        background: #000;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #333;
+        color: white;
+        text-decoration: none;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        margin: 3rem 0;
+    }
+
+    .pagination a,
+    .pagination span {
+        padding: 0.5rem 1rem;
+        border: 1px solid #e5e5e5;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #666;
+        transition: all 0.3s ease;
+    }
+
+    .pagination a:hover,
+    .pagination .current {
+        background: #000;
+        color: white;
+        border-color: #000;
+        text-decoration: none;
+    }
+</style>
+
+<div class="container">
+    <h1>Browse Cars</h1>
+
+    <!-- Search Filters -->
+    <div class="search-filters">
+        <form method="get" action="@Url.Action("Index")">
+            <div class="filter-row">
+                <div class="form-group">
+                    <label>Make</label>
+                    <select name="make" id="makeSelect">
+                        <option value="">Any Make</option>
+                        @if (ViewBag.Makes != null)
+                        {
+                        @foreach (var item in ViewBag.Makes as SelectList)
+                        {
+                        <option value="@item.Value" selected="@(item.Value == currentMake)">@item.Text</option>
+                        }
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Model</label>
+                    <select name="model" id="modelSelect">
+                        <option value="">Any Model</option>
+                        @if (ViewBag.Models != null)
+                        {
+                        @foreach (var item in ViewBag.Models as SelectList)
+                        {
+                        <option value="@item.Value" selected="@(item.Value == currentModel)">@item.Text</option>
+                        }
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Price From</label>
+                    <input type="number" name="priceFrom" value="@ViewBag.CurrentPriceFrom" placeholder="Min Price">
+                </div>
+
+                <div class="form-group">
+                    <label>Price To</label>
+                    <input type="number" name="priceTo" value="@ViewBag.CurrentPriceTo" placeholder="Max Price">
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="form-group">
+                    <label>Year From</label>
+                    <select name="yearFrom">
+                        <option value="">Any Year</option>
+                        @if (ViewBag.Years != null)
+                        {
+                        @foreach (var item in ViewBag.Years as SelectList)
+                        {
+                        <option value="@item.Value" selected="@(item.Value == ViewBag.CurrentYearFrom?.ToString())">@item.Text</option>
+                        }
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Year To</label>
+                    <select name="yearTo">
+                        <option value="">Any Year</option>
+                        @if (ViewBag.Years != null)
+                        {
+                        @foreach (var item in ViewBag.Years as SelectList)
+                        {
+                        <option value="@item.Value" selected="@(item.Value == ViewBag.CurrentYearTo?.ToString())">@item.Text</option>
+                        }
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Max Mileage</label>
+                    <input type="number" name="maxMileage" value="@ViewBag.CurrentMaxMileage" placeholder="Max Mileage">
+                </div>
+
+                <div class="form-group">
+                    <label>Fuel Type</label>
+                    <select name="fuel">
+                        <option value="">Any Fuel</option>
+                        @if (ViewBag.FuelTypes != null)
+                        {
+                        @foreach (var item in ViewBag.FuelTypes as SelectList)
+                        {
+                        <option value="@item.Value" selected="@(item.Value == ((int?)currentFuel)?.ToString())">@item.Text</option>
+                        }
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="form-group">
+                    <label>Body Type</label>
+                    <select name="bodyType">
+                        <option value="">Any Body Type</option>
+                        @if (ViewBag.BodyTypes != null)
+                        {
+                        @foreach (var item in ViewBag.BodyTypes as SelectList)
+                        {
+                        <option value="@item.Value" selected="@(item.Value == ((int?)currentBodyType)?.ToString())">@item.Text</option>
+                        }
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Transmission</label>
+                    <select name="transmission">
+                        <option value="">Any Transmission</option>
+                        @if (ViewBag.Transmissions != null)
+                        {
+                        @foreach (var item in ViewBag.Transmissions as SelectList)
+                        {
+                        <option value="@item.Value" selected="@(item.Value == ((int?)currentTransmission)?.ToString())">@item.Text</option>
+                        }
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" name="city" value="@ViewBag.CurrentCity" placeholder="Enter city">
+                </div>
+
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn btn-primary">Search Cars</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Header -->
+    <div class="search-results-header">
+        <div class="results-count">
+            @ViewBag.TotalCount cars found
+        </div>
+        <div class="sort-options">
+            <span>Sort by:</span>
+            <select onchange="changeSorting(this.value)">
+                <option value="created-desc" selected="@(currentSortBy == "created" && currentSortOrder == "desc")">Newest First</option>
+                <option value="created-asc" selected="@(currentSortBy == "created" && currentSortOrder == "asc")">Oldest First</option>
+                <option value="price-asc" selected="@(currentSortBy == "price" && currentSortOrder == "asc")">Price: Low to High</option>
+                <option value="price-desc" selected="@(currentSortBy == "price" && currentSortOrder == "desc")">Price: High to Low</option>
+                <option value="year-desc" selected="@(currentSortBy == "year" && currentSortOrder == "desc")">Year: Newest</option>
+                <option value="mileage-asc" selected="@(currentSortBy == "mileage" && currentSortOrder == "asc")">Mileage: Lowest</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Car Listings -->
+    <div class="listings-grid">
+        @foreach (var car in Model)
+        {
+        <div class="listing-card" onclick="window.location.href='@Url.Action("Details", new { id = car.Id })'">
+            <div class="listing-image">
+                @if (car.Images.Any())
+                {
+                <img src="@(car.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? car.Images.First().ImageUrl)"
+                     alt="@car.Make @car.Model"
+                     style="width: 100%; height: 100%; object-fit: cover;" />
+                }
+                else
+                {
+                <span>@car.Make @car.Model</span>
+                }
+                @if (car.CreatedAt >= DateTime.UtcNow.AddDays(-7))
+                {
+                <div class="listing-badge">NEW</div>
+                }
+            </div>
+            <div class="listing-content">
+                <h3 class="listing-title">@car.Make @car.Model</h3>
+                <div class="listing-details">
+                    <span>@car.Year</span>
+                    <span>•</span>
+                    <span>@car.Mileage?.ToString("N0") km</span>
+                    <span>•</span>
+                    <span>@car.Transmission</span>
+                    <span>•</span>
+                    <span>@car.Fuel</span>
+                </div>
+                <div class="listing-price">€@car.Price?.ToString("N0")</div>
+                <div class="listing-location">@car.ListingOwner?.City</div>
+            </div>
+        </div>
+        }
+    </div>
+
+    <!-- Pagination -->
+    @if (ViewBag.TotalPages > 1)
+    {
+    <div class="pagination">
+        @if ((bool)ViewBag.HasPreviousPage)
+        {
+        <a href="@Url.Action("Index", new {
+        page = (int)ViewBag.CurrentPage - 1,
+        make = currentMake,
+        model = currentModel,
+        yearFrom = ViewBag.CurrentYearFrom,
+        yearTo = ViewBag.CurrentYearTo,
+        priceFrom = ViewBag.CurrentPriceFrom,
+        priceTo = ViewBag.CurrentPriceTo,
+        maxMileage = ViewBag.CurrentMaxMileage,
+        fuel = currentFuel,
+        bodyType = currentBodyType,
+        transmission = currentTransmission,
+        color = currentColor,
+        city = ViewBag.CurrentCity,
+        sortBy = currentSortBy,
+        sortOrder = currentSortOrder
+        })">Previous</a>
+        }
+
+        @for (int i = Math.Max(1, (int)ViewBag.CurrentPage - 2); i <= Math.Min((int)ViewBag.TotalPages, (int)ViewBag.CurrentPage + 2); i++)
+        {
+        @if (i == (int)ViewBag.CurrentPage)
+        {
+        <span class="current">@i</span>
+        }
+        else
+        {
+        <a href="@Url.Action("Index", new {
+        page = i,
+        make = currentMake,
+        model = currentModel,
+        yearFrom = ViewBag.CurrentYearFrom,
+        yearTo = ViewBag.CurrentYearTo,
+        priceFrom = ViewBag.CurrentPriceFrom,
+        priceTo = ViewBag.CurrentPriceTo,
+        maxMileage = ViewBag.CurrentMaxMileage,
+        fuel = currentFuel,
+        bodyType = currentBodyType,
+        transmission = currentTransmission,
+        color = currentColor,
+        city = ViewBag.CurrentCity,
+        sortBy = currentSortBy,
+        sortOrder = currentSortOrder
+        })">@i</a>
+        }
+        }
+
+        @if ((bool)ViewBag.HasNextPage)
+        {
+        <a href="@Url.Action("Index", new {
+        page = (int)ViewBag.CurrentPage + 1,
+        make = currentMake,
+        model = currentModel,
+        yearFrom = ViewBag.CurrentYearFrom,
+        yearTo = ViewBag.CurrentYearTo,
+        priceFrom = ViewBag.CurrentPriceFrom,
+        priceTo = ViewBag.CurrentPriceTo,
+        maxMileage = ViewBag.CurrentMaxMileage,
+        fuel = currentFuel,
+        bodyType = currentBodyType,
+        transmission = currentTransmission,
+        color = currentColor,
+        city = ViewBag.CurrentCity,
+        sortBy = currentSortBy,
+        sortOrder = currentSortOrder
+        })">Next</a>
+        }
+    </div>
+    }
+</div>
+
+<script>
+    // Make/Model dropdown dependency
+    document.getElementById('makeSelect').addEventListener('change', function() {
+        const make = this.value;
+        const modelSelect = document.getElementById('modelSelect');
+
+        // Clear model options
+        modelSelect.innerHTML = '<option value="">Any Model</option>';
+
+        if (make) {
+            fetch('@Url.Action("GetModelsByMake")' + '?make=' + encodeURIComponent(make))
+                .then(response => response.json())
+                .then(models => {
+                    models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model;
+                        option.textContent = model;
+                        modelSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading models:', error));
+        }
+    });
+
+    // Sorting functionality
+    function changeSorting(value) {
+        const [sortBy, sortOrder] = value.split('-');
+        const url = new URL(window.location);
+        url.searchParams.set('sortBy', sortBy);
+        url.searchParams.set('sortOrder', sortOrder);
+        url.searchParams.set('page', '1'); // Reset to first page
+        window.location.href = url.toString();
+    }
+</script>

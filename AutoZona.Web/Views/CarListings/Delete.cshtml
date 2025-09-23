@@ -1,105 +1,145 @@
+@* Views/CarListings/Delete.cshtml *@
 @model AutoZona.Domain.DomainModels.CarListing
-
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Delete Car Listing";
 }
 
-<h1>Delete</h1>
-
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>CarListing</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Make)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Make)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Model)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Model)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Year)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Year)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Price)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Price)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Mileage)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Mileage)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Fuel)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Fuel)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Color)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Color)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Transmission)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Transmission)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.BodyType)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.BodyType)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IsActive)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IsActive)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ListingOwnerId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ListingOwnerId)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UpdatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UpdatedAt)
-        </dd>
-    </dl>
+<style>
+    .delete-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
     
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
+    .delete-warning {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .delete-warning h2 {
+        color: #856404;
+        margin-bottom: 1rem;
+    }
+    
+    .delete-warning p {
+        color: #856404;
+        margin-bottom: 0;
+    }
+    
+    .car-summary {
+        background: white;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .car-summary h3 {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: #000;
+    }
+    
+    .car-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .detail-label {
+        color: #666;
+        font-weight: 500;
+    }
+    
+    .detail-value {
+        color: #000;
+        font-weight: 600;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+    
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+        border-color: #dc3545;
+    }
+    
+    .btn-danger:hover {
+        background: #c82333;
+        border-color: #bd2130;
+        color: white;
+        text-decoration: none;
+    }
+</style>
+
+<div class="delete-container">
+    <a href="@Url.Action("MyListings")" class="back-link">← Back to my listings</a>
+    
+    <div class="delete-warning">
+        <h2>⚠️ Delete Car Listing</h2>
+        <p>Are you sure you want to delete this listing? This action cannot be undone.</p>
+    </div>
+    
+    <div class="car-summary">
+        <h3>@Model.Make @Model.Model (@Model.Year)</h3>
+        
+        <div class="car-details">
+            <div class="detail-item">
+                <span class="detail-label">Price</span>
+                <span class="detail-value">€@Model.Price?.ToString("N0")</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Mileage</span>
+                <span class="detail-value">@Model.Mileage?.ToString("N0") km</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Fuel Type</span>
+                <span class="detail-value">@Model.Fuel</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Transmission</span>
+                <span class="detail-value">@Model.Transmission</span>
+            </div>
+        </div>
+        
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <div class="detail-item">
+                <span class="detail-label">Description</span>
+                <span class="detail-value">@Model.Description</span>
+            </div>
+        }
+        
+        <div class="detail-item">
+            <span class="detail-label">Listed On</span>
+            <span class="detail-value">@Model.CreatedAt.ToString("MMM dd, yyyy")</span>
+        </div>
+    </div>
+    
+    <form asp-action="Delete" method="post">
+        @Html.AntiForgeryToken()
+        <input asp-for="Id" type="hidden" />
+        
+        <div class="form-actions">
+            <a href="@Url.Action("MyListings")" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-danger">Delete Listing</button>
+        </div>
     </form>
 </div>

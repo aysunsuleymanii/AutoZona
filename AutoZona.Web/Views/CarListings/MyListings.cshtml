@@ -1,0 +1,282 @@
+@* Views/CarListings/MyListings.cshtml *@
+@model IEnumerable<AutoZona.Domain.DomainModels.CarListing>
+@{
+    ViewData["Title"] = "My Car Listings";
+}
+
+<style>
+    .my-listings-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .listings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e5e5;
+    }
+
+    .listings-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #000;
+    }
+
+    .btn-create {
+        background: #000;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-create:hover {
+        background: #333;
+        color: white;
+        text-decoration: none;
+    }
+
+    .listings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+    }
+
+    .my-listing-card {
+        background: white;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .my-listing-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .listing-image {
+        height: 200px;
+        background: #f8f8f8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-size: 1.2rem;
+        font-weight: 600;
+        border-bottom: 1px solid #e5e5e5;
+        position: relative;
+    }
+
+    .listing-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .listing-status {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .status-active {
+        background: #28a745;
+        color: white;
+    }
+
+    .status-inactive {
+        background: #dc3545;
+        color: white;
+    }
+
+    .listing-content {
+        padding: 1.5rem;
+    }
+
+    .listing-title {
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #000;
+    }
+
+    .listing-details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .listing-price {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #000;
+        margin-bottom: 1rem;
+    }
+
+    .listing-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 1rem;
+    }
+
+    .listing-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-align: center;
+        flex: 1;
+    }
+
+    .btn-outline-primary {
+        background: transparent;
+        color: #007bff;
+        border: 1px solid #007bff;
+    }
+
+    .btn-outline-primary:hover {
+        background: #007bff;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-outline-secondary {
+        background: transparent;
+        color: #666;
+        border: 1px solid #ccc;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #f8f8f8;
+        color: #333;
+        text-decoration: none;
+    }
+
+    .btn-outline-danger {
+        background: transparent;
+        color: #dc3545;
+        border: 1px solid #dc3545;
+    }
+
+    .btn-outline-danger:hover {
+        background: #dc3545;
+        color: white;
+        text-decoration: none;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #666;
+    }
+
+    .empty-state h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+    .empty-state p {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+    
+
+</style>
+
+<div class="my-listings-container">
+    <div class="listings-header">
+        <h1 class="listings-title">My Car Listings</h1>
+        <a href="@Url.Action("Create")" class="btn-create">+ List New Car</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <h3>No listings yet</h3>
+            <p>You haven't listed any cars yet. Start by creating your first listing!</p>
+            <a href="@Url.Action("Create")" class="btn btn-primary">List Your First Car</a>
+        </div>
+    }
+    else
+    {
+        <div class="listings-grid">
+            @foreach (var car in Model)
+            {
+                <div class="my-listing-card">
+                    <div class="listing-image">
+                        @if (car.Images.Any())
+                        {
+                            <img
+                                src="@(car.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? car.Images.First().ImageUrl)"
+                                alt="@car.Make @car.Model"/>
+                        }
+                        else
+                        {
+                            <span>@car.Make @car.Model</span>
+                        }
+
+                        <div class="listing-status @(car.IsActive ? "status-active" : "status-inactive")">
+                            @(car.IsActive ? "ACTIVE" : "INACTIVE")
+                        </div>
+                    </div>
+
+                    <div class="listing-content">
+                        <h3 class="listing-title">@car.Make @car.Model</h3>
+                        <div class="listing-details">
+                            <span>@car.Year</span>
+                            <span>•</span>
+                            <span>@car.Mileage?.ToString("N0") km</span>
+                            <span>•</span>
+                            <span>@car.Fuel</span>
+                            <span>•</span>
+                            <span>@car.Transmission</span>
+                        </div>
+                        <div class="listing-price">€@car.Price?.ToString("N0")</div>
+
+                        <div class="listing-meta">
+                            <span>Listed: @car.CreatedAt.ToString("MMM dd, yyyy")</span>
+                            <span>Views: 0</span> @* This would come from analytics *@
+                        </div>
+
+                        <div class="listing-actions">
+                            <a href="@Url.Action("Details", new { id = car.Id })" class="btn-sm btn-outline-primary">
+                                View
+                            </a>
+                            <a href="@Url.Action("Edit", new { id = car.Id })" class="btn-sm btn-outline-secondary">
+                                Edit
+                            </a>
+                            <a href="@Url.Action("Delete", new { id = car.Id })" class="btn-sm btn-outline-danger">
+                                Delete
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

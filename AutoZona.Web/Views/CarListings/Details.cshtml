@@ -1,102 +1,335 @@
+@* Views/CarListings/Details.cshtml *@
 @model AutoZona.Domain.DomainModels.CarListing
-
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = $"{Model.Make} {Model.Model} - Car Details";
 }
 
-<h1>Details</h1>
+<style>
+    .car-details-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
 
-<div>
-    <h4>CarListing</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Make)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Make)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Model)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Model)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Year)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Year)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Price)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Price)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Mileage)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Mileage)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Fuel)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Fuel)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Color)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Color)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Transmission)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Transmission)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.BodyType)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.BodyType)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IsActive)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IsActive)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ListingOwnerId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ListingOwnerId)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UpdatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UpdatedAt)
-        </dd>
-    </dl>
+    .car-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e5e5;
+    }
+
+    .car-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #000;
+    }
+
+    .car-subtitle {
+        color: #666;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .car-price {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #000;
+    }
+
+    .car-main-content {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 3rem;
+        margin-bottom: 3rem;
+    }
+
+    .car-images {
+        background: #f8f8f8;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .main-image {
+        width: 100%;
+        height: 400px;
+        background: #f8f8f8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .main-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .image-thumbnails {
+        display: flex;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: white;
+    }
+
+    .thumbnail {
+        width: 80px;
+        height: 60px;
+        background: #f8f8f8;
+        border-radius: 4px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: border-color 0.3s ease;
+    }
+
+    .thumbnail.active,
+    .thumbnail:hover {
+        border-color: #000;
+    }
+
+    .thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .car-info {
+        background: white;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        padding: 2rem;
+    }
+
+    .info-section {
+        margin-bottom: 2rem;
+    }
+
+    .info-section h3 {
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: #000;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-label {
+        color: #666;
+        font-weight: 500;
+    }
+
+    .info-value {
+        color: #000;
+        font-weight: 600;
+    }
+
+    .seller-info {
+        background: #f8f8f8;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+
+    .seller-name {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #000;
+    }
+
+    .contact-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: 1px solid #000;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .btn-primary {
+        background: #000;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #333;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: #000;
+    }
+
+    .btn-outline:hover {
+        background: #000;
+        color: white;
+        text-decoration: none;
+    }
+
+    .car-description {
+        background: white;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .back-link {
+        color: #666;
+        text-decoration: none;
+        margin-bottom: 2rem;
+        display: inline-block;
+        transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: #000;
+        text-decoration: none;
+    }
+
+    
+</style>
+
+<div class="car-details-container">
+    <a href="@Url.Action("Index")" class="back-link">← Back to listings</a>
+
+    <div class="car-header">
+        <h1 class="car-title">@Model.Make @Model.Model</h1>
+        <p class="car-subtitle">@Model.Year • @Model.Mileage?.ToString("N0") km • @Model.Fuel • @Model.Transmission</p>
+        <div class="car-price">€@Model.Price?.ToString("N0")</div>
+    </div>
+
+    <div class="car-main-content">
+        <div class="car-images">
+            <div class="main-image" id="mainImage">
+                @if (Model.Images.Any())
+                {
+                    <img
+                        src="@(Model.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? Model.Images.First().ImageUrl)"
+                        alt="@Model.Make @Model.Model"
+                        id="mainImageImg"/>
+                }
+                else
+                {
+                    <span>@Model.Make @Model.Model</span>
+                }
+            </div>
+
+            @if (Model.Images.Count() > 1)
+            {
+                <div class="image-thumbnails">
+                    @foreach (var image in Model.Images.OrderBy(i => i.DisplayOrder))
+                    {
+                        <div class="thumbnail @(image.IsPrimary ? "active" : "")"
+                             onclick="changeMainImage('@image.ImageUrl', this)">
+                            <img src="@image.ImageUrl" alt="@image.Description"/>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="car-info">
+            <div class="seller-info">
+                <div class="seller-name">@Model.ListingOwner?.FirstName @Model.ListingOwner?.LastName</div>
+                <div style="color: #666; margin-bottom: 1rem;">@Model.ListingOwner?.City</div>
+
+                <div class="contact-buttons">
+                    <a href="tel:@Model.ListingOwner?.PhoneNumber" class="btn btn-primary">
+                        📞 Call Seller
+                    </a>
+                    <a href="mailto:@Model.ListingOwner?.Email" class="btn btn-outline">
+                        ✉️ Email Seller
+                    </a>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3>Vehicle Details</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Make</span>
+                        <span class="info-value">@Model.Make</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Model</span>
+                        <span class="info-value">@Model.Model</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Year</span>
+                        <span class="info-value">@Model.Year</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Mileage</span>
+                        <span class="info-value">@Model.Mileage?.ToString("N0") km</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Fuel Type</span>
+                        <span class="info-value">@Model.Fuel</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Transmission</span>
+                        <span class="info-value">@Model.Transmission</span>
+                    </div>
+                    @if (Model.Color.HasValue)
+                    {
+                        <div class="info-item">
+                            <span class="info-label">Color</span>
+                            <span class="info-value">@Model.Color</span>
+                        </div>
+                    }
+                    @if (Model.BodyType.HasValue)
+                    {
+                        <div class="info-item">
+                            <span class="info-label">Body Type</span>
+                            <span class="info-value">@Model.BodyType</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.Description))
+    {
+        <div class="car-description">
+            <h3>Description</h3>
+            <p>@Model.Description</p>
+        </div>
+    }
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+
+<script>
+    function changeMainImage(imageUrl, thumbnail) {
+        document.getElementById('mainImageImg').src = imageUrl;
+
+        // Update active thumbnail
+        document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+        thumbnail.classList.add('active');
+    }
+</script>

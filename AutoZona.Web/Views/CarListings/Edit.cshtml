@@ -1,96 +1,157 @@
+@* Views/CarListings/Edit.cshtml *@
 @model AutoZona.Domain.DomainModels.CarListing
-
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Car Listing";
 }
 
-<h1>Edit</h1>
-
-<h4>CarListing</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Make" class="control-label"></label>
-                <input asp-for="Make" class="form-control" />
-                <span asp-validation-for="Make" class="text-danger"></span>
+<div class="create-form-container">
+    <a href="@Url.Action("MyListings")" class="back-link">← Back to my listings</a>
+    
+    <h1>Edit Car Listing</h1>
+    
+    <form asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="ListingOwnerId" type="hidden" />
+        <input asp-for="CreatedAt" type="hidden" />
+        <input asp-for="IsActive" type="hidden" />
+        
+        <!-- Basic Information -->
+        <div class="form-section">
+            <h2 class="section-title">Basic Information</h2>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="Make">Make *</label>
+                    <input asp-for="Make" class="form-control" placeholder="Enter make" />
+                    <span asp-validation-for="Make" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label asp-for="Model">Model *</label>
+                    <input asp-for="Model" class="form-control" placeholder="Enter model" />
+                    <span asp-validation-for="Model" class="text-danger"></span>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Model" class="control-label"></label>
-                <input asp-for="Model" class="form-control" />
-                <span asp-validation-for="Model" class="text-danger"></span>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="Year">Year *</label>
+                    <input asp-for="Year" type="number" min="1990" max="2025" class="form-control" />
+                    <span asp-validation-for="Year" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label asp-for="Price">Price (€) *</label>
+                    <input asp-for="Price" type="number" min="0" step="100" class="form-control" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Year" class="control-label"></label>
-                <input asp-for="Year" class="form-control" />
-                <span asp-validation-for="Year" class="text-danger"></span>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="Mileage">Mileage (km) *</label>
+                    <input asp-for="Mileage" type="number" min="0" class="form-control" />
+                    <span asp-validation-for="Mileage" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label asp-for="Fuel">Fuel Type *</label>
+                    <select asp-for="Fuel" class="form-control">
+                        <option value="">Select Fuel Type</option>
+                        <option value="0">Gasoline</option>
+                        <option value="1">Diesel</option>
+                        <option value="2">Electric</option>
+                        <option value="3">Hybrid</option>
+                        <option value="4">PlugInHybrid</option>
+                        <option value="5">LPG</option>
+                        <option value="6">CNG</option>
+                        <option value="7">Hydrogen</option>
+                        <option value="8">Other</option>
+                    </select>
+                    <span asp-validation-for="Fuel" class="text-danger"></span>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Price" class="control-label"></label>
-                <input asp-for="Price" class="form-control" />
-                <span asp-validation-for="Price" class="text-danger"></span>
+        </div>
+        
+        <!-- Additional Details -->
+        <div class="form-section">
+            <h2 class="section-title">Additional Details</h2>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="BodyType">Body Type</label>
+                    <select asp-for="BodyType" class="form-control">
+                        <option value="">Select Body Type</option>
+                        <option value="0">Sedan</option>
+                        <option value="1">Hatchback</option>
+                        <option value="2">Coupe</option>
+                        <option value="3">Convertible</option>
+                        <option value="4">Wagon</option>
+                        <option value="5">SUV</option>
+                        <option value="6">Crossover</option>
+                        <option value="7">Pickup</option>
+                        <option value="8">Minivan</option>
+                        <option value="9">Other</option>
+                    </select>
+                    <span asp-validation-for="BodyType" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label asp-for="Transmission">Transmission</label>
+                    <select asp-for="Transmission" class="form-control">
+                        <option value="">Select Transmission</option>
+                        <option value="0">Manual</option>
+                        <option value="1">Automatic</option>
+                        <option value="2">CVT</option>
+                        <option value="3">SemiAutomatic</option>
+                        <option value="4">DualClutch</option>
+                    </select>
+                    <span asp-validation-for="Transmission" class="text-danger"></span>
+                </div>
             </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="Color">Color</label>
+                    <select asp-for="Color" class="form-control">
+                        <option value="">Select Color</option>
+                        <option value="0">Black</option>
+                        <option value="1">White</option>
+                        <option value="2">Silver</option>
+                        <option value="3">Gray</option>
+                        <option value="4">Red</option>
+                        <option value="5">Blue</option>
+                        <option value="6">Green</option>
+                        <option value="7">Yellow</option>
+                        <option value="8">Orange</option>
+                        <option value="9">Brown</option>
+                        <option value="10">Purple</option>
+                        <option value="11">Gold</option>
+                        <option value="12">Beige</option>
+                        <option value="13">Maroon</option>
+                        <option value="14">Navy</option>
+                        <option value="15">Other</option>
+                    </select>
+                    <span asp-validation-for="Color" class="text-danger"></span>
+                </div>
+            </div>
+            
             <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
+                <label asp-for="Description">Description</label>
+                <textarea asp-for="Description" class="form-control" rows="4" 
+                         placeholder="Describe your car's condition, features, service history, etc."></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Mileage" class="control-label"></label>
-                <input asp-for="Mileage" class="form-control" />
-                <span asp-validation-for="Mileage" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Fuel" class="control-label"></label>
-                <input asp-for="Fuel" class="form-control" />
-                <span asp-validation-for="Fuel" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Color" class="control-label"></label>
-                <input asp-for="Color" class="form-control" />
-                <span asp-validation-for="Color" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Transmission" class="control-label"></label>
-                <input asp-for="Transmission" class="form-control" />
-                <span asp-validation-for="Transmission" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="BodyType" class="control-label"></label>
-                <input asp-for="BodyType" class="form-control" />
-                <span asp-validation-for="BodyType" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsActive" /> @Html.DisplayNameFor(model => model.IsActive)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="ListingOwnerId" class="control-label"></label>
-                <input asp-for="ListingOwnerId" class="form-control" />
-                <span asp-validation-for="ListingOwnerId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
-                <input asp-for="CreatedAt" class="form-control" />
-                <span asp-validation-for="CreatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UpdatedAt" class="control-label"></label>
-                <input asp-for="UpdatedAt" class="form-control" />
-                <span asp-validation-for="UpdatedAt" class="text-danger"></span>
-            </div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
+        </div>
+        
+        <div class="form-actions">
+            <a href="@Url.Action("MyListings")" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Update Listing</button>
+        </div>
+    </form>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
