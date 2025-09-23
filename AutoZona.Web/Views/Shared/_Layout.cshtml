@@ -3,16 +3,18 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>@ViewData["Title"] - AutoZona.Web</title>
+    <title>@ViewData["Title"] - AutoZona</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/AutoZona.Web.styles.css" asp-append-version="true"/>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 <header>
     <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
         <div class="container-fluid">
-            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">AutoZona.Web</a>
+            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">AutoZona</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                     aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -20,34 +22,212 @@
             <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                 <ul class="navbar-nav flex-grow-1">
                     <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">
+                            <i class="fas fa-home"></i> Home
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="CarListings" asp-action="Index">CarListings</a>
+                        <a class="nav-link text-dark" asp-area="" asp-controller="CarListings" asp-action="Index">
+                            <i class="fas fa-car"></i> Browse Cars
+                        </a>
                     </li>
                 </ul>
-                <partial name="_LoginPartial"/>
+                
+                <!-- User Authentication Section -->
+                <ul class="navbar-nav">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <!-- User Dropdown Menu -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle"></i> Hello @User.Identity.Name!
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><h6 class="dropdown-header">My Account</h6></li>
+                                <li><a class="dropdown-item" href="@Url.Action("MyListings", "CarListings")">
+                                    <i class="fas fa-list"></i> View My Listings
+                                </a></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Index", "Favorites")">
+                                    <i class="fas fa-heart"></i> My Favorites
+                                </a></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Create", "CarListings")">
+                                    <i class="fas fa-plus"></i> List New Car
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Settings</h6></li>
+                                <li><a class="dropdown-item" href="/Identity/Account/Manage">
+                                    <i class="fas fa-user-cog"></i> Manage Account
+                                </a></li>
+                                <li><a class="dropdown-item" href="/Identity/Account/Manage/ChangePassword">
+                                    <i class="fas fa-key"></i> Change Password
+                                </a></li>
+                                <li><a class="dropdown-item" href="/Identity/Account/Manage/Email">
+                                    <i class="fas fa-envelope"></i> Email Settings
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home")" method="post" class="d-inline">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-sign-out-alt"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="/Identity/Account/Login">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="/Identity/Account/Register">
+                                <i class="fas fa-user-plus"></i> Register
+                            </a>
+                        </li>
+                    }
+                </ul>
             </div>
         </div>
     </nav>
 </header>
+
+<!-- Display TempData messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <div class="container">
     <main role="main" class="pb-3">
         @RenderBody()
     </main>
 </div>
 
+<!-- Include favorites modal for authenticated users -->
+@if (User.Identity.IsAuthenticated)
+{
+    @Html.AntiForgeryToken()
+    @await Html.PartialAsync("_AddToFavoritesModal")
+}
+
 <footer class="border-top footer text-muted">
     <div class="container">
-        &copy; 2025 - AutoZona.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        &copy; 2025 - AutoZona - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
     </div>
 </footer>
+
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", required: false)
+
+<style>
+    /* Custom dropdown styles */
+    .dropdown-menu {
+        min-width: 220px;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-radius: 8px;
+        padding: 0.5rem 0;
+    }
+    
+    .dropdown-header {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 0.5rem 1rem 0.25rem;
+        margin: 0;
+    }
+    
+    .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .dropdown-item:hover {
+        background-color: #f8f9fa;
+        color: #000;
+    }
+    
+    .dropdown-item i {
+        width: 16px;
+        text-align: center;
+        color: #6c757d;
+    }
+    
+    .dropdown-item:hover i {
+        color: #000;
+    }
+    
+    .dropdown-item.text-danger:hover {
+        background-color: #f8d7da;
+        color: #dc3545;
+    }
+    
+    .dropdown-item.text-danger:hover i {
+        color: #dc3545;
+    }
+    
+    .dropdown-divider {
+        margin: 0.5rem 0;
+        border-color: #e9ecef;
+    }
+    
+    .dropdown-toggle::after {
+        margin-left: 0.5rem;
+        vertical-align: middle;
+    }
+    
+    /* Alert message styling */
+    .alert {
+        margin: 1rem 0;
+        border: none;
+        border-radius: 8px;
+    }
+    
+    .alert-success {
+        background-color: #d1edff;
+        color: #0c5460;
+        border-left: 4px solid #0dcaf0;
+    }
+    
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #842029;
+        border-left: 4px solid #dc3545;
+    }
+    
+    /* Navigation improvements */
+    .navbar-brand {
+        font-weight: bold;
+        font-size: 1.5rem;
+    }
+    
+    .nav-link i {
+        margin-right: 0.25rem;
+    }
+    
+   
+</style>
 </body>
 </html>

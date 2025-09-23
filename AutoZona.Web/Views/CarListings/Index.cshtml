@@ -11,6 +11,12 @@ var currentSortBy = ViewBag.CurrentSortBy as string ?? "created";
 var currentSortOrder = ViewBag.CurrentSortOrder as string ?? "desc";
 }
 
+<!-- Include anti-forgery token for authenticated users -->
+@if (User.Identity.IsAuthenticated)
+{
+@Html.AntiForgeryToken()
+}
+
 <style>
     .search-filters {
         background: white;
@@ -79,7 +85,7 @@ var currentSortOrder = ViewBag.CurrentSortOrder as string ?? "desc";
         border-radius: 8px;
         overflow: hidden;
         transition: all 0.3s ease;
-        cursor: pointer;
+        position: relative;
     }
 
     .listing-card:hover {
@@ -99,6 +105,7 @@ var currentSortOrder = ViewBag.CurrentSortOrder as string ?? "desc";
         font-weight: 600;
         border-bottom: 1px solid #e5e5e5;
         position: relative;
+        cursor: pointer;
     }
 
     .listing-badge {
@@ -113,8 +120,130 @@ var currentSortOrder = ViewBag.CurrentSortOrder as string ?? "desc";
         font-weight: 600;
     }
 
+    .favorites-btn {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #ddd;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 10;
+        backdrop-filter: blur(10px);
+    }
+
+    .favorites-btn:hover {
+        background: rgba(255, 255, 255, 1);
+        border-color: #007bff;
+        transform: scale(1.1);
+    }
+
+    .favorites-btn.in-favorites {
+        background: rgba(255, 240, 240, 0.95);
+        border-color: #ff6b6b;
+    }
+
+    .favorites-btn.in-favorites:hover {
+        background: rgba(255, 220, 220, 1);
+        border-color: #e55757;
+    }
+
+    .login-prompt-btn {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #ddd;
+        cursor: not-allowed;
+    }
+
+    /* CSS Heart Icon - Centered and Simplified */
+    /* CSS Plus Icon - Centered */
+    .heart-icon {
+        position: relative;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+
+    .heart-icon::before,
+    .heart-icon::after {
+        content: '';
+        position: absolute;
+        background: currentColor;
+    }
+
+    .heart-icon::before {
+        width: 2px;
+        height: 16px;
+        top: 2px;
+        left: 9px;
+    }
+
+    .heart-icon::after {
+        width: 16px;
+        height: 2px;
+        top: 9px;
+        left: 2px;
+    }
+
+    /* Favorites button plus icon states - Simplified */
+    .favorites-btn .heart-icon {
+        color: #666;
+        transition: all 0.3s ease;
+    }
+
+    .favorites-btn:hover .heart-icon {
+        color: #ff6b6b;
+        transform: scale(1.1);
+    }
+
+    .favorites-btn.in-favorites .heart-icon {
+        color: #000;
+    }
+
+    .favorites-btn.in-favorites:hover .heart-icon {
+        color: #333;
+        transform: scale(1.1);
+    }
+
+    .login-prompt-btn .heart-icon {
+        color: #ccc;
+    }
+
+    .login-prompt-btn:hover .heart-icon {
+        color: #999;
+    }
+
+    /* Alternative smaller plus for tighter spaces */
+    .heart-icon.small {
+        width: 16px;
+        height: 16px;
+    }
+
+    .heart-icon.small::before {
+        width: 2px;
+        height: 12px;
+        top: 2px;
+        left: 7px;
+    }
+
+    .heart-icon.small::after {
+        width: 12px;
+        height: 2px;
+        top: 7px;
+        left: 2px;
+    }
+
     .listing-content {
         padding: 1.5rem;
+        cursor: pointer;
     }
 
     .listing-title {
@@ -193,6 +322,31 @@ var currentSortOrder = ViewBag.CurrentSortOrder as string ?? "desc";
         border-color: #000;
         text-decoration: none;
     }
+
+    /* Notification styles */
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 4px;
+        z-index: 2000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        max-width: 300px;
+        word-wrap: break-word;
+        animation: slideIn 0.3s ease;
+    }
+
+    .notification.success {
+        background: #28a745;
+        color: white;
+    }
+
+    .notification.error {
+        background: #dc3545;
+        color: white;
+    }
+    
 </style>
 
 <div class="container">
@@ -354,8 +508,26 @@ var currentSortOrder = ViewBag.CurrentSortOrder as string ?? "desc";
     <div class="listings-grid">
         @foreach (var car in Model)
         {
-        <div class="listing-card" onclick="window.location.href='@Url.Action("Details", new { id = car.Id })'">
-            <div class="listing-image">
+        <div class="listing-card">
+            <div class="listing-image" onclick="window.location.href='@Url.Action("Details", new { id = car.Id })'">
+                @if (User.Identity.IsAuthenticated)
+                {
+                <button class="favorites-btn"
+                        onclick="event.stopPropagation(); toggleFavorite('@car.Id')"
+                        title="Add to favorites"
+                        data-car-id="@car.Id">
+                    <span class="heart-icon"></span>
+                </button>
+                }
+                else
+                {
+                <button class="favorites-btn login-prompt-btn"
+                        onclick="event.stopPropagation(); showLoginPrompt()"
+                        title="Login to add to favorites">
+                    <span class="heart-icon"></span>
+                </button>
+                }
+
                 @if (car.Images.Any())
                 {
                 <img src="@(car.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? car.Images.First().ImageUrl)"
@@ -371,7 +543,7 @@ var currentSortOrder = ViewBag.CurrentSortOrder as string ?? "desc";
                 <div class="listing-badge">NEW</div>
                 }
             </div>
-            <div class="listing-content">
+            <div class="listing-content" onclick="window.location.href='@Url.Action("Details", new { id = car.Id })'">
                 <h3 class="listing-title">@car.Make @car.Model</h3>
                 <div class="listing-details">
                     <span>@car.Year</span>
@@ -466,13 +638,16 @@ var currentSortOrder = ViewBag.CurrentSortOrder as string ?? "desc";
     }
 </div>
 
+@if (User.Identity.IsAuthenticated)
+{
+@await Html.PartialAsync("_AddToFavoritesModal")
+}
+
 <script>
-    // Make/Model dropdown dependency
     document.getElementById('makeSelect').addEventListener('change', function() {
         const make = this.value;
         const modelSelect = document.getElementById('modelSelect');
 
-        // Clear model options
         modelSelect.innerHTML = '<option value="">Any Model</option>';
 
         if (make) {
@@ -490,7 +665,6 @@ var currentSortOrder = ViewBag.CurrentSortOrder as string ?? "desc";
         }
     });
 
-    // Sorting functionality
     function changeSorting(value) {
         const [sortBy, sortOrder] = value.split('-');
         const url = new URL(window.location);
@@ -498,5 +672,134 @@ var currentSortOrder = ViewBag.CurrentSortOrder as string ?? "desc";
         url.searchParams.set('sortOrder', sortOrder);
         url.searchParams.set('page', '1'); // Reset to first page
         window.location.href = url.toString();
+    }
+
+    function showLoginPrompt() {
+        showNotification('Please log in to add cars to your favorites', 'error');
+        setTimeout(() => {
+            if (confirm('Would you like to log in now?')) {
+                window.location.href = '@Url.Action("Login", "Account")';
+            }
+        }, 1000);
+    }
+
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    @if (User.Identity.IsAuthenticated)
+    {
+    <text>
+    document.addEventListener('DOMContentLoaded', function() {
+        updateAllFavoritesButtons();
+    });
+
+    async function toggleFavorite(carId) {
+        const btn = document.querySelector(`[data-car-id="${carId}"]`);
+        const isCurrentlyFavorite = btn.classList.contains('in-favorites');
+
+        try {
+            if (isCurrentlyFavorite) {
+                const listResponse = await fetch(`@Url.Action("CheckCarInFavorites", "Favorites")?carId=${carId}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!listResponse.ok) {
+                    throw new Error(`HTTP error! status: ${listResponse.status}`);
+                }
+
+                const listData = await listResponse.json();
+
+                if (listData.success && listData.lists && listData.lists.length > 0) {
+                    // Use the first list if car is in multiple lists
+                    const listId = listData.lists[0].id;
+
+                    // Remove from the specific favorites list
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]');
+
+                    const removeResponse = await fetch('@Url.Action("RemoveFromFavorites", "Favorites")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            listId: listId,
+                            carId: carId
+                        })
+                    });
+
+                    if (!removeResponse.ok) {
+                        throw new Error(`HTTP error! status: ${removeResponse.status}`);
+                    }
+
+                    const data = await removeResponse.json();
+                    if (data.success) {
+                        btn.classList.remove('in-favorites');
+                        btn.title = 'Add to favorites';
+                        showNotification('Car removed from favorites', 'success');
+                    } else {
+                        showNotification(data.message || 'Failed to remove from favorites', 'error');
+                    }
+                } else {
+                    showNotification('Could not find the favorites list for this car', 'error');
+                }
+            } else {
+                // Add to favorites - show modal for list selection
+                showAddToFavoritesModal(carId);
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+            showNotification('An error occurred while removing the car from favorites.', 'error');
+        }
+    }
+
+    async function updateAllFavoritesButtons() {
+        const favoritesBtns = document.querySelectorAll('.favorites-btn[data-car-id]');
+
+        for (const btn of favoritesBtns) {
+            const carId = btn.getAttribute('data-car-id');
+            if (carId) {
+                await updateSingleFavoriteButton(carId, btn);
+            }
+        }
+    }
+
+    // Update a single favorite button
+    async function updateSingleFavoriteButton(carId, btn) {
+        try {
+            const response = await fetch(`@Url.Action("CheckCarInFavorites", "Favorites")?carId=${carId}`);
+            const data = await response.json();
+
+            if (data.success && data.inFavorites) {
+                btn.classList.remove('in-favorites');
+                btn.offsetHeight;
+                btn.classList.add('in-favorites');
+                btn.title = 'Already in favorites - click to view lists';
+            } else {
+                btn.classList.remove('in-favorites');
+                btn.title = 'Add to favorites';
+            }
+        } catch (error) {
+            console.error('Error checking favorites status:', error);
+        }
+    }
+
+    const originalCloseModal = window.closeAddToFavoritesModal;
+    window.closeAddToFavoritesModal = function() {
+        if (originalCloseModal) originalCloseModal();
+        setTimeout(updateAllFavoritesButtons, 500);
+    };
+    </text>
     }
 </script>

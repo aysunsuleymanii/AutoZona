@@ -1,7 +1,7 @@
 @* Views/CarListings/Create.cshtml *@
 @model AutoZona.Domain.DomainModels.CarListing
 @{
-    ViewData["Title"] = "List Your Car";
+ViewData["Title"] = "List Your Car";
 }
 
 <style>
@@ -126,8 +126,94 @@
         color: #000;
         text-decoration: none;
     }
-   
 
+    /* Photo upload styles */
+    .photo-upload-area {
+        border: 2px dashed #e5e5e5;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        background: #fafafa;
+        transition: all 0.3s ease;
+    }
+
+    .photo-upload-area:hover {
+        border-color: #000;
+        background: #f0f0f0;
+    }
+
+    .photo-upload-area.drag-over {
+        border-color: #000;
+        background: #f0f0f0;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .upload-button {
+        background: #000;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+        margin: 1rem 0;
+    }
+
+    .upload-button:hover {
+        background: #333;
+    }
+
+    .preview-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .image-preview {
+        position: relative;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        overflow: hidden;
+        aspect-ratio: 1;
+    }
+
+    .image-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .remove-image {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #dc3545;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .remove-image:hover {
+        background: white;
+        color: #a02622;
+    }
+
+    .upload-info {
+        font-size: 0.875rem;
+        color: #666;
+        margin-top: 0.5rem;
+    }
 </style>
 
 <div class="create-form-container">
@@ -135,7 +221,7 @@
 
     <h1>List Your Car</h1>
 
-    <form asp-action="Create" method="post">
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
 
         <!-- Basic Information -->
@@ -194,6 +280,34 @@
                     <span asp-validation-for="Fuel" class="text-danger"></span>
                 </div>
             </div>
+        </div>
+
+        <!-- Car Photos -->
+        <div class="form-section">
+            <h2 class="section-title">Car Photos</h2>
+
+            <div class="photo-upload-area" id="photoUploadArea">
+                <div class="upload-content">
+                    <p>📷 Upload photos of your car</p>
+                    <button type="button" class="upload-button" onclick="document.getElementById('photoInput').click()">
+                        Choose Photos
+                    </button>
+                    <p class="upload-info">
+                        or drag and drop photos here<br>
+                        Maximum 10 photos • JPG, PNG • Max 5MB each
+                    </p>
+                </div>
+            </div>
+
+            <input type="file"
+                   id="photoInput"
+                   name="PhotoFiles"
+                   class="file-input"
+                   multiple
+                   accept="image/jpeg,image/jpg,image/png"
+                   onchange="handleFileSelect(event)">
+
+            <div id="imagePreview" class="preview-container"></div>
         </div>
 
         <!-- Additional Details -->
@@ -274,6 +388,95 @@
     </form>
 </div>
 
+<script>
+    let selectedFiles = [];
+
+    function handleFileSelect(event) {
+        const files = Array.from(event.target.files);
+        addFiles(files);
+    }
+
+    function addFiles(files) {
+        files.forEach(file => {
+            if (selectedFiles.length >= 10) {
+                alert('Maximum 10 photos allowed');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert(`File ${file.name} is too large. Maximum size is 5MB.`);
+                return;
+            }
+
+            if (!file.type.match('image.*')) {
+                alert(`File ${file.name} is not an image.`);
+                return;
+            }
+
+            selectedFiles.push(file);
+        });
+
+        updateFileInput();
+        updatePreview();
+    }
+
+    function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        updateFileInput();
+        updatePreview();
+    }
+
+    function updateFileInput() {
+        const input = document.getElementById('photoInput');
+        const dt = new DataTransfer();
+
+        selectedFiles.forEach(file => {
+            dt.items.add(file);
+        });
+
+        input.files = dt.files;
+    }
+
+    function updatePreview() {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = '';
+
+        selectedFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.className = 'image-preview';
+                div.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview">
+                    <button type="button" class="remove-image" onclick="removeFile(${index})">×</button>
+                `;
+                preview.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Drag and drop functionality
+    const uploadArea = document.getElementById('photoUploadArea');
+
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('drag-over');
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        const files = Array.from(e.dataTransfer.files);
+        addFiles(files);
+    });
+</script>
+
 @section Scripts {
-    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 }

@@ -1,0 +1,331 @@
+@model IEnumerable<AutoZona.Domain.DomainModels.FavoriteList>
+@{
+    ViewData["Title"] = "My Favorites";
+}
+
+<style>
+    .favorites-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    .favorites-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e5e5;
+    }
+    
+    .favorites-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #000;
+    }
+    
+    .btn-create {
+        background: #000;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-create:hover {
+        background: #333;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .favorites-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+    }
+    
+    .favorites-card {
+        background: white;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .favorites-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .card-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e5e5e5;
+        background: #f8f8f8;
+    }
+    
+    .list-title {
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #000;
+    }
+    
+    .list-description {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    
+    .list-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        color: #666;
+    }
+    
+    .car-preview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.5rem;
+        padding: 1rem;
+        max-height: 150px;
+        overflow: hidden;
+    }
+    
+    .preview-car {
+        aspect-ratio: 4/3;
+        background: #f8f8f8;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .preview-car img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .preview-car-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        color: #666;
+        text-align: center;
+        padding: 0.5rem;
+    }
+    
+    .more-cars {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .card-actions {
+        display: flex;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: #f8f8f8;
+    }
+    
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-align: center;
+        flex: 1;
+    }
+    
+    .btn-outline-primary {
+        background: transparent;
+        color: #007bff;
+        border: 1px solid #007bff;
+    }
+    
+    .btn-outline-primary:hover {
+        background: #007bff;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-outline-secondary {
+        background: transparent;
+        color: #666;
+        border: 1px solid #ccc;
+    }
+    
+    .btn-outline-secondary:hover {
+        background: #f8f8f8;
+        color: #333;
+        text-decoration: none;
+    }
+    
+    .btn-outline-danger {
+        background: transparent;
+        color: #dc3545;
+        border: 1px solid #dc3545;
+    }
+    
+    .btn-outline-danger:hover {
+        background: #dc3545;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #666;
+    }
+    
+    .empty-state h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+    
+    .empty-state p {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: 1px solid #000;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+    
+    .btn-primary {
+        background: #000;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #333;
+        color: white;
+        text-decoration: none;
+    }
+</style>
+
+<div class="favorites-container">
+    <div class="favorites-header">
+        <h1 class="favorites-title">My Favorites</h1>
+        <a href="@Url.Action("Create")" class="btn-create">+ Create New List</a>
+    </div>
+    
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <h3>No favorites lists yet</h3>
+            <p>Create your first favorites list to start organizing the cars you love!</p>
+            <a href="@Url.Action("Create")" class="btn btn-primary">Create Your First List</a>
+        </div>
+    }
+    else
+    {
+        <div class="favorites-grid">
+            @foreach (var list in Model)
+            {
+                <div class="favorites-card">
+                    <div class="card-header">
+                        <h3 class="list-title">@list.Name</h3>
+                        @if (!string.IsNullOrEmpty(list.Description))
+                        {
+                            <p class="list-description">@list.Description</p>
+                        }
+                        <div class="list-meta">
+                            <span>@list.FavoriteItems.Count cars</span>
+                            <span>Created @list.CreatedAt.ToString("MMM dd, yyyy")</span>
+                        </div>
+                    </div>
+                    
+                    @if (list.FavoriteItems.Any())
+                    {
+                        <div class="car-preview">
+                            @{
+                                var displayCars = list.FavoriteItems.Take(4).ToList();
+                                var remainingCount = list.FavoriteItems.Count - 4;
+                            }
+                            
+                            @foreach (var item in displayCars.Take(3))
+                            {
+                                <div class="preview-car">
+                                    @if (item.CarListing?.Images?.Any() == true)
+                                    {
+                                        <img src="@(item.CarListing.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? item.CarListing.Images.First().ImageUrl)" 
+                                             alt="@item.CarListing.Make @item.CarListing.Model" />
+                                    }
+                                    else
+                                    {
+                                        <div class="preview-car-placeholder">
+                                            @item.CarListing?.Make @item.CarListing?.Model
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            
+                            @if (remainingCount > 0)
+                            {
+                                <div class="preview-car more-cars">
+                                    +@remainingCount more
+                                </div>
+                            }
+                            else if (displayCars.Count == 4)
+                            {
+                                <div class="preview-car">
+                                    @if (displayCars.Last().CarListing?.Images?.Any() == true)
+                                    {
+                                        <img src="@(displayCars.Last().CarListing.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? displayCars.Last().CarListing.Images.First().ImageUrl)" 
+                                             alt="@displayCars.Last().CarListing?.Make @displayCars.Last().CarListing?.Model" />
+                                    }
+                                    else
+                                    {
+                                        <div class="preview-car-placeholder">
+                                            @displayCars.Last().CarListing?.Make @displayCars.Last().CarListing?.Model
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="padding: 2rem; text-align: center; color: #666;">
+                            No cars added yet
+                        </div>
+                    }
+                    
+                    <div class="card-actions">
+                        <a href="@Url.Action("Details", new { id = list.Id })" class="btn-sm btn-outline-primary">
+                            View (@list.FavoriteItems.Count)
+                        </a>
+                        <a href="@Url.Action("Edit", new { id = list.Id })" class="btn-sm btn-outline-secondary">
+                            Edit
+                        </a>
+                        <a href="@Url.Action("Delete", new { id = list.Id })" class="btn-sm btn-outline-danger">
+                            Delete
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

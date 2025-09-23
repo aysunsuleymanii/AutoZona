@@ -33,6 +33,7 @@ public interface ICarListingService
     Task<IEnumerable<string>> GetAvailableModelsAsync(string make);
     Task<int> GetTotalActiveListingsCountAsync();
 
+
     public Task<(IEnumerable<CarListing> cars, int totalCount)> GetCarsWithPaginationAsync(
         int page = 1,
         int pageSize = 20,
@@ -50,4 +51,14 @@ public interface ICarListingService
         string? city = null,
         string? sortBy = "created",
         string? sortOrder = "desc");
+
+
+    Task<bool> DeleteCarImageAsync(Guid imageId, string userId);
+    Task<List<CarImage>> GetCarImagesAsync(Guid carListingId);
+    Task<CarImage> CreateCarImageAsync(CarImage carImage);
+    Task<bool> UpdateImageDisplayOrderAsync(Guid imageId, int displayOrder, string userId);
+    Task<bool> SetMainImageAsync(Guid imageId, string userId);
+    Task<CarImage?> GetMainImageAsync(Guid carListingId);
+    Task<int> GetImageCountAsync(Guid carListingId);
+    Task<bool> ValidateImageOwnershipAsync(Guid imageId, string userId);
 }
