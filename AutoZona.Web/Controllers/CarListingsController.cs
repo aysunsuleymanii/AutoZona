@@ -1,5 +1,3 @@
-// Controllers/CarListingsController.cs
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,17 +19,20 @@ namespace AutoZona.Web.Controllers
         private readonly IFavoriteItemService _favoritesService;
         private readonly UserManager<AutoZonaApplicationUser> _userManager;
         private readonly ILogger<CarListingsController> _logger;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public CarListingsController(
             ICarListingService carService,
             IFavoriteItemService favoritesService,
             UserManager<AutoZonaApplicationUser> userManager,
-            ILogger<CarListingsController> logger)
+            ILogger<CarListingsController> logger,
+            IWebHostEnvironment webHostEnvironment)
         {
             _carService = carService;
             _favoritesService = favoritesService;
             _userManager = userManager;
             _logger = logger;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: CarListings
@@ -92,7 +93,7 @@ namespace AutoZona.Web.Controllers
                 ViewBag.CurrentSortBy = sortBy;
                 ViewBag.CurrentSortOrder = sortOrder;
 
-                return View(cars.ToList()); // Convert to List to resolve ambiguity
+                return View(cars.ToList()); 
             }
             catch (Exception ex)
             {
@@ -156,11 +157,10 @@ namespace AutoZona.Web.Controllers
             return View();
         }
 
-        // POST: CarListings/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public async Task<IActionResult> Create(CarListing carListing)
+        public async Task<IActionResult> Create(CarListing carListing, List<IFormFile> PhotoFiles)
         {
             try
             {
@@ -177,10 +177,16 @@ namespace AutoZona.Web.Controllers
                     carListing.UpdatedAt = DateTime.UtcNow;
                     carListing.IsActive = true;
 
+                    // Process uploaded photos
+                    if (PhotoFiles != null && PhotoFiles.Any())
+                    {
+                        await ProcessCarPhotos(carListing, PhotoFiles);
+                    }
+
                     await _carService.CreateCarListingAsync(carListing);
 
                     TempData["SuccessMessage"] = "Your car listing has been created successfully!";
-                    return RedirectToAction(nameof(MyListings));
+                    return RedirectToAction(nameof(Index));
                 }
             }
             catch (Exception ex)
@@ -197,6 +203,62 @@ namespace AutoZona.Web.Controllers
             ViewBag.Colors = GetColorsSelectList();
 
             return View(carListing);
+        }
+
+        private async Task ProcessCarPhotos(CarListing carListing, List<IFormFile> photoFiles)
+        {
+            // Create uploads directory if it doesn't exist
+            var uploadsPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "cars");
+            if (!Directory.Exists(uploadsPath))
+            {
+                Directory.CreateDirectory(uploadsPath);
+            }
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+            const long maxFileSize = 5 * 1024 * 1024; // 5MB
+
+            for (int i = 0; i < Math.Min(photoFiles.Count, 10); i++) // Limit to 10 photos
+            {
+                var file = photoFiles[i];
+
+                if (file == null || file.Length == 0)
+                    continue;
+
+                // Validate file
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(extension))
+                {
+                    _logger.LogWarning("Invalid file extension: {Extension}", extension);
+                    continue;
+                }
+
+                if (file.Length > maxFileSize)
+                {
+                    _logger.LogWarning("File too large: {Size} bytes", file.Length);
+                    continue;
+                }
+
+                // Generate unique filename
+                var fileName = $"{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(uploadsPath, fileName);
+
+                // Save file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Create CarImage entity
+                var carImage = new CarImage
+                {
+                    Id = Guid.NewGuid(),
+                    CarListingId = carListing.Id,
+                    ImageUrl = $"/uploads/cars/{fileName}",
+                    IsPrimary = i == 0,
+                };
+
+                carListing.Images.Add(carImage);
+            }
         }
 
         // GET: CarListings/Edit/5

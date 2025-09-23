@@ -1,0 +1,413 @@
+
+<div id="addToFavoritesModal" class="modal" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add to Favorites</h5>
+                <button type="button" class="close-modal" onclick="closeAddToFavoritesModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="favoritesListsContainer">
+                    <div class="loading">Loading your favorites lists...</div>
+                </div>
+                <div class="create-new-list">
+                    <button type="button" class="btn-link" onclick="toggleCreateNewList()">
+                        + Create New List
+                    </button>
+                    <div id="createNewListForm" style="display: none; margin-top: 1rem;">
+                        <input type="text" id="newListName" placeholder="List name" class="form-control" maxlength="100" />
+                        <textarea id="newListDescription" placeholder="Description (optional)" class="form-control" style="margin-top: 0.5rem; height: 60px;" maxlength="500"></textarea>
+                        <div style="margin-top: 0.5rem;">
+                            <button type="button" class="btn btn-sm btn-primary" onclick="createAndAddToNewList()">Create & Add</button>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="toggleCreateNewList()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-dialog {
+        background: white;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 80vh;
+        overflow: hidden;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid #e5e5e5;
+    }
+    
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin: 0;
+    }
+    
+    .close-modal {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .favorites-list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border: 1px solid #e5e5e5;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .favorites-list-item:hover {
+        background: #f8f9fa;
+    }
+    
+    .favorites-list-item.already-added {
+        background: #e8f5e8;
+        border-color: #28a745;
+        cursor: default;
+    }
+    
+    .list-info h6 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .list-info small {
+        color: #666;
+    }
+    
+    .btn-link {
+        background: none;
+        border: none;
+        color: #007bff;
+        cursor: pointer;
+        padding: 0;
+        font-size: 0.9rem;
+    }
+    
+    .btn-link:hover {
+        text-decoration: underline;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 0.9rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        border: none;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .btn-primary {
+        background: #007bff;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #0056b3;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-secondary {
+        background: transparent;
+        color: #666;
+        border: 1px solid #ccc;
+    }
+    
+    .btn-secondary:hover {
+        background: #f8f8f8;
+        color: #333;
+        text-decoration: none;
+    }
+    
+    .loading {
+        text-align: center;
+        color: #666;
+        padding: 2rem;
+    }
+    
+    .empty-lists {
+        text-align: center;
+        color: #666;
+        padding: 2rem;
+    }
+    
+    .checkmark {
+        color: #28a745;
+        font-weight: bold;
+    }
+    
+    .create-new-list {
+        border-top: 1px solid #e5e5e5;
+        padding-top: 1rem;
+        margin-top: 1rem;
+    }
+</style>
+
+<script>
+    // JavaScript for Add to Favorites Modal
+    // This can be included in a separate file or in a script section
+
+    let currentCarId = null;
+
+    async function showAddToFavoritesModal(carId) {
+        currentCarId = carId;
+        document.getElementById('addToFavoritesModal').style.display = 'flex';
+        await loadUserFavoritesLists();
+    }
+
+    function closeAddToFavoritesModal() {
+        document.getElementById('addToFavoritesModal').style.display = 'none';
+        currentCarId = null;
+        document.getElementById('createNewListForm').style.display = 'none';
+        document.getElementById('newListName').value = '';
+        document.getElementById('newListDescription').value = '';
+    }
+
+    async function loadUserFavoritesLists() {
+        const container = document.getElementById('favoritesListsContainer');
+        container.innerHTML = '<div class="loading">Loading your favorites lists...</div>';
+
+        try {
+            // Replace with your actual URL action
+            const response = await fetch('/Favorites/GetUserFavoritesLists');
+            const data = await response.json();
+
+            if (data.success && data.lists.length > 0) {
+                // Check which lists already contain this car
+                const carResponse = await fetch(`/Favorites/CheckCarInFavorites?carId=${currentCarId}`);
+                const carData = await carResponse.json();
+                const listsWithCar = carData.success ? carData.lists.map(l => l.id) : [];
+
+                let html = '';
+                data.lists.forEach(list => {
+                    const isAlreadyAdded = listsWithCar.includes(list.id);
+                    html += `
+                    <div class="favorites-list-item ${isAlreadyAdded ? 'already-added' : ''}" 
+                         ${!isAlreadyAdded ? `onclick="addToExistingList('${list.id}')"` : ''}>
+                        <div class="list-info">
+                            <h6>${list.name}</h6>
+                            <small>${list.itemCount} cars</small>
+                        </div>
+                        <div>
+                            ${isAlreadyAdded ? '<span class="checkmark">✓ Added</span>' : '<span>+</span>'}
+                        </div>
+                    </div>
+                `;
+                });
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<div class="empty-lists">No favorites lists yet. Create your first one below!</div>';
+            }
+        } catch (error) {
+            container.innerHTML = '<div class="empty-lists">Error loading favorites lists.</div>';
+        }
+    }
+
+    async function addToExistingList(listId) {
+        try {
+            const response = await fetch('/Favorites/AddToFavorites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                },
+                body: JSON.stringify({
+                    listId: listId,
+                    carId: currentCarId
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                closeAddToFavoritesModal();
+                showNotification(result.message || 'Car added to favorites!', 'success');
+                // Refresh the favorites button if it exists on the page
+                updateFavoritesButton();
+            } else {
+                showNotification(result.message || 'Error adding car to favorites', 'error');
+            }
+        } catch (error) {
+            showNotification('Error adding car to favorites', 'error');
+        }
+    }
+
+    function toggleCreateNewList() {
+        const form = document.getElementById('createNewListForm');
+        const isVisible = form.style.display !== 'none';
+        form.style.display = isVisible ? 'none' : 'block';
+        if (!isVisible) {
+            document.getElementById('newListName').focus();
+        }
+    }
+
+    async function createAndAddToNewList() {
+        const name = document.getElementById('newListName').value.trim();
+        const description = document.getElementById('newListDescription').value.trim();
+
+        if (!name) {
+            showNotification('Please enter a list name', 'error');
+            return;
+        }
+
+        try {
+            // First create the list
+            const createResponse = await fetch('/Favorites/Create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                },
+                body: `name=${encodeURIComponent(name)}&description=${encodeURIComponent(description)}`
+            });
+
+            if (createResponse.ok) {
+                // Reload the lists and try to add to the new one
+                await loadUserFavoritesLists();
+                showNotification('List created! Please select it to add the car.', 'success');
+                toggleCreateNewList();
+            } else {
+                showNotification('Error creating list', 'error');
+            }
+        } catch (error) {
+            showNotification('Error creating list', 'error');
+        }
+    }
+
+    function showNotification(message, type = 'info') {
+        // Create a simple notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff'};
+        color: white;
+        border-radius: 4px;
+        z-index: 2000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        max-width: 300px;
+        word-wrap: break-word;
+    `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    // Function to update favorites button state (to be called from car listing pages)
+    async function updateFavoritesButton() {
+        const btn = document.querySelector('.favorites-btn');
+        if (btn && currentCarId) {
+            try {
+                const response = await fetch(`/Favorites/CheckCarInFavorites?carId=${currentCarId}`);
+                const data = await response.json();
+                if (data.success && data.inFavorites) {
+                    btn.classList.add('in-favorites');
+                    btn.innerHTML = '❤️ In Favorites';
+                } else {
+                    btn.classList.remove('in-favorites');
+                    btn.innerHTML = '🤍 Add to Favorites';
+                }
+            } catch (error) {
+                console.error('Error updating favorites button:', error);
+            }
+        }
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('click', function(event) {
+        const modal = document.getElementById('addToFavoritesModal');
+        if (event.target === modal) {
+            closeAddToFavoritesModal();
+        }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const modal = document.getElementById('addToFavoritesModal');
+            if (modal.style.display !== 'none') {
+                closeAddToFavoritesModal();
+            }
+        }
+    });
+
+    // Function to initialize favorites button on car listing pages
+    function initializeFavoritesButton(carId) {
+        currentCarId = carId;
+        updateFavoritesButton();
+    }
+
+    // Helper function to get anti-forgery token
+    function getAntiForgeryToken() {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]');
+        return token ? token.value : '';
+    }
+
+    // Function to add CSRF token to fetch requests
+    function createRequestWithToken(url, options = {}) {
+        const token = getAntiForgeryToken();
+        if (token && options.method && options.method.toLowerCase() !== 'get') {
+            options.headers = {
+                ...options.headers,
+                'RequestVerificationToken': token
+            };
+        }
+        return fetch(url, options);
+    }
+</script>

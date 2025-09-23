@@ -1,0 +1,228 @@
+@model AutoZona.Domain.DomainModels.FavoriteList
+@{
+    ViewData["Title"] = "Delete Favorites List";
+}
+
+<style>
+    .delete-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    .form-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e5e5;
+    }
+    
+    .form-header h1 {
+        font-size: 1.75rem;
+        font-weight: bold;
+        color: #000;
+        margin: 0;
+    }
+    
+    .back-link {
+        color: #666;
+        text-decoration: none;
+        margin-right: 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .back-link:hover {
+        color: #333;
+        text-decoration: none;
+    }
+    
+    .alert {
+        padding: 1rem;
+        margin-bottom: 2rem;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+    
+    .alert-warning {
+        color: #856404;
+        background-color: #fff3cd;
+        border-color: #ffeaa7;
+    }
+    
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+    
+    .danger-icon {
+        color: #dc3545;
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .delete-confirmation {
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .list-info {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        text-align: left;
+    }
+    
+    .list-info h4 {
+        margin: 0 0 1rem 0;
+        font-weight: bold;
+    }
+    
+    .list-info p {
+        margin: 0.5rem 0;
+        color: #666;
+    }
+    
+    .car-preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 0.5rem;
+        margin-top: 1rem;
+        max-height: 100px;
+        overflow: hidden;
+    }
+    
+    .preview-car-small {
+        aspect-ratio: 4/3;
+        background: #f8f8f8;
+        border-radius: 4px;
+        overflow: hidden;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: #666;
+    }
+    
+    .preview-car-small img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        border: none;
+    }
+    
+    .btn-secondary {
+        background: transparent;
+        color: #666;
+        border: 1px solid #ccc;
+    }
+    
+    .btn-secondary:hover {
+        background: #f8f8f8;
+        color: #333;
+        text-decoration: none;
+    }
+    
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+        border: 1px solid #dc3545;
+    }
+    
+    .btn-danger:hover {
+        background: #c82333;
+        color: white;
+        text-decoration: none;
+    }
+</style>
+
+<div class="delete-container">
+    <div class="form-header">
+        <a href="@Url.Action("Details", new { id = Model.Id })" class="back-link">←</a>
+        <h1>Delete Favorites List</h1>
+    </div>
+    
+    <div class="delete-confirmation">
+        <div class="danger-icon">⚠️</div>
+        <h2>Are you sure you want to delete this list?</h2>
+        <p style="color: #666; margin-bottom: 2rem;">This action cannot be undone.</p>
+        
+        <div class="list-info">
+            <h4>@Model.Name</h4>
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <p><strong>Description:</strong> @Model.Description</p>
+            }
+            <p><strong>Created:</strong> @Model.CreatedAt.ToString("MMM dd, yyyy")</p>
+            <p><strong>Cars in list:</strong> @Model.FavoriteItems.Count</p>
+            
+            @if (Model.FavoriteItems.Any())
+            {
+                <p><strong>Cars that will be removed from this list:</strong></p>
+                <div class="car-preview-grid">
+                    @foreach (var item in Model.FavoriteItems.Take(8))
+                    {
+                        <div class="preview-car-small">
+                            @if (item.CarListing?.Images?.Any() == true)
+                            {
+                                <img src="@(item.CarListing.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? item.CarListing.Images.First().ImageUrl)" 
+                                     alt="@item.CarListing.Make @item.CarListing.Model" />
+                            }
+                            else
+                            {
+                                @item.CarListing?.Make @item.CarListing?.Model
+                            }
+                        </div>
+                    }
+                    @if (Model.FavoriteItems.Count > 8)
+                    {
+                        <div class="preview-car-small" style="background: rgba(0,0,0,0.8); color: white;">
+                            +@(Model.FavoriteItems.Count - 8) more
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        
+        @if (Model.FavoriteItems.Count > 0)
+        {
+            <div class="alert alert-warning">
+                <strong>Note:</strong> Deleting this list will remove all @Model.FavoriteItems.Count cars from it, 
+                but the cars themselves will remain available on the site.
+            </div>
+        }
+        
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <div class="form-actions">
+                <a href="@Url.Action("Details", new { id = Model.Id })" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-danger" 
+                        onclick="return confirm('Are you absolutely sure? This cannot be undone.')">
+                    Yes, Delete This List
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -462,3 +462,4 @@ obj/
 # Temporary files
 **/*TestView.html
 Test/
+AutoZona.Web/wwwroot/uploads/

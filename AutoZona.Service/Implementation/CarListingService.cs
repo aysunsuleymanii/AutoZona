@@ -29,10 +29,6 @@ public class CarListingService : ICarListingService
         try
         {
             carListing.Id = Guid.NewGuid();
-            carListing.CreatedAt = DateTime.UtcNow;
-            carListing.UpdatedAt = DateTime.UtcNow;
-            carListing.IsActive = true;
-
             var result = _carRepository.Insert(carListing);
             _logger.LogInformation("Car listing created successfully with ID {CarId} for user {UserId}",
                 result.Id, carListing.ListingOwnerId);
@@ -509,5 +505,221 @@ public class CarListingService : ICarListingService
                 ? query.OrderByDescending(c => c.CreatedAt)
                 : query.OrderBy(c => c.CreatedAt)
         };
+    }
+
+
+    // Add these methods to your CarListingService class
+
+    public async Task<bool> DeleteCarImageAsync(Guid imageId, string userId)
+    {
+        try
+        {
+            var image = _imageRepository.Get(
+                selector: i => i,
+                predicate: i => i.Id == imageId,
+                include: query => query.Include(i => i.CarListing)
+            );
+
+            if (image == null || image.CarListing.ListingOwnerId != userId)
+            {
+                _logger.LogWarning("Unauthorized attempt to delete image {ImageId} by user {UserId}", imageId, userId);
+                return false;
+            }
+
+            // Delete physical file
+            var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var fullPath = Path.Combine(webRootPath, image.ImageUrl.TrimStart('/'));
+
+            if (File.Exists(fullPath))
+            {
+                File.Delete(fullPath);
+            }
+
+            // Delete from database
+            _imageRepository.Delete(image);
+
+            _logger.LogInformation("Car image {ImageId} deleted successfully", imageId);
+            return await Task.FromResult(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting car image {ImageId}", imageId);
+            throw;
+        }
+    }
+
+    public async Task<List<CarImage>> GetCarImagesAsync(Guid carListingId)
+    {
+        try
+        {
+            var images = _imageRepository.GetAll(
+                selector: i => i,
+                predicate: i => i.CarListingId == carListingId,
+                orderBy: query => query.OrderBy(i => i.DisplayOrder).ThenBy(i => i.Id)
+            ).ToList();
+
+            return await Task.FromResult(images);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving images for car listing {CarListingId}", carListingId);
+            throw;
+        }
+    }
+
+    public async Task<CarImage> CreateCarImageAsync(CarImage carImage)
+    {
+        try
+        {
+            carImage.Id = Guid.NewGuid();
+
+            var result = _imageRepository.Insert(carImage);
+
+            _logger.LogInformation("Car image created successfully with ID {ImageId} for car {CarListingId}",
+                result.Id, carImage.CarListingId);
+
+            return await Task.FromResult(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating car image for car listing {CarListingId}", carImage.CarListingId);
+            throw;
+        }
+    }
+
+    public async Task<bool> UpdateImageDisplayOrderAsync(Guid imageId, int displayOrder, string userId)
+    {
+        try
+        {
+            var image = _imageRepository.Get(
+                selector: i => i,
+                predicate: i => i.Id == imageId,
+                include: query => query.Include(i => i.CarListing)
+            );
+
+            if (image == null || image.CarListing.ListingOwnerId != userId)
+            {
+                return false;
+            }
+
+            image.DisplayOrder = displayOrder;
+            _imageRepository.Update(image);
+
+            _logger.LogInformation("Image {ImageId} display order updated to {DisplayOrder}", imageId, displayOrder);
+            return await Task.FromResult(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating display order for image {ImageId}", imageId);
+            throw;
+        }
+    }
+
+    public async Task<bool> SetMainImageAsync(Guid imageId, string userId)
+    {
+        try
+        {
+            var image = _imageRepository.Get(
+                selector: i => i,
+                predicate: i => i.Id == imageId,
+                include: query => query.Include(i => i.CarListing)
+            );
+
+            if (image == null || image.CarListing.ListingOwnerId != userId)
+            {
+                return false;
+            }
+
+            // First, set all images of this car to not main
+            var allImages = _imageRepository.GetAll(
+                selector: i => i,
+                predicate: i => i.CarListingId == image.CarListingId
+            );
+
+            foreach (var img in allImages)
+            {
+                img.IsPrimary = false;
+                _imageRepository.Update(img);
+            }
+
+            // Then set the selected image as main
+            image.IsPrimary = true;
+            _imageRepository.Update(image);
+
+            _logger.LogInformation("Image {ImageId} set as main image for car {CarListingId}",
+                imageId, image.CarListingId);
+
+            return await Task.FromResult(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting main image {ImageId}", imageId);
+            throw;
+        }
+    }
+
+    public async Task<CarImage?> GetMainImageAsync(Guid carListingId)
+    {
+        try
+        {
+            var mainImage = _imageRepository.Get(
+                selector: i => i,
+                predicate: i => i.CarListingId == carListingId && i.IsPrimary
+            );
+
+            // If no main image is set, return the first image
+            if (mainImage == null)
+            {
+                mainImage = _imageRepository.GetAll(
+                    selector: i => i,
+                    predicate: i => i.CarListingId == carListingId,
+                    orderBy: query => query.OrderBy(i => i.DisplayOrder) ).FirstOrDefault();
+            }
+
+            return await Task.FromResult(mainImage);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting main image for car listing {CarListingId}", carListingId);
+            throw;
+        }
+    }
+
+    public async Task<int> GetImageCountAsync(Guid carListingId)
+    {
+        try
+        {
+            var count = _imageRepository.GetAll(
+                selector: i => i.Id,
+                predicate: i => i.CarListingId == carListingId
+            ).Count();
+
+            return await Task.FromResult(count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting image count for car listing {CarListingId}", carListingId);
+            throw;
+        }
+    }
+
+    public async Task<bool> ValidateImageOwnershipAsync(Guid imageId, string userId)
+    {
+        try
+        {
+            var image = _imageRepository.Get(
+                selector: i => i,
+                predicate: i => i.Id == imageId,
+                include: query => query.Include(i => i.CarListing)
+            );
+
+            return await Task.FromResult(image?.CarListing.ListingOwnerId == userId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating image ownership for image {ImageId} and user {UserId}",
+                imageId, userId);
+            throw;
+        }
     }
 }
